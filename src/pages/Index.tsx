@@ -29,8 +29,8 @@ const Index = () => {
     setSelectedItem(item);
   };
 
-  const handleAction = async (item: TranslationItem, action: string, editedKo?: string) => {
-    await performAction(item, action, editedKo);
+  const handleAction = async (item: TranslationItem, action: string, edits?: { key?: string; zu?: string; ko?: string; en?: string }) => {
+    await performAction(item, action, edits);
     // Update the selected item with new state
     const updatedItem = items.find((i) => i.id === item.id);
     if (updatedItem) {
