@@ -6,15 +6,17 @@ import { StateFilter } from '@/components/StateFilter';
 import { TranslationTable } from '@/components/TranslationTable';
 import { TranslationDetail } from '@/components/TranslationDetail';
 import { StatsCard } from '@/components/StatsCard';
+import { NewTranslationForm } from '@/components/NewTranslationForm';
 import { 
   Inbox, 
   CheckCircle2, 
   AlertTriangle, 
-  Database 
+  Database,
+  FileText
 } from 'lucide-react';
 
 const Index = () => {
-  const { items, isRefreshing, refresh, performAction, counts } = useTranslations();
+  const { items, isRefreshing, refresh, addItem, performAction, counts } = useTranslations();
   const [selectedItem, setSelectedItem] = useState<TranslationItem | null>(null);
   const [filterState, setFilterState] = useState<TranslationState | 'all'>('all');
 
@@ -44,6 +46,13 @@ const Index = () => {
   const currentSelectedItem = selectedItem 
     ? items.find((i) => i.id === selectedItem.id) || null 
     : null;
+
+  const handleAddTranslation = (key: string, zu: string) => {
+    const newItem = addItem(key, zu);
+    setSelectedItem(newItem);
+  };
+
+  const existingKeys = useMemo(() => items.map((i) => i.key), [items]);
 
   return (
     <div className="min-h-screen bg-background">
@@ -82,8 +91,12 @@ const Index = () => {
           />
         </div>
 
-        {/* Filter */}
-        <div className="mb-6">
+        {/* Actions & Filter */}
+        <div className="flex flex-col sm:flex-row sm:items-center sm:justify-between gap-4 mb-6">
+          <NewTranslationForm 
+            onSubmit={handleAddTranslation}
+            existingKeys={existingKeys}
+          />
           <StateFilter
             selectedState={filterState}
             onStateChange={setFilterState}
@@ -95,11 +108,25 @@ const Index = () => {
         <div className="grid grid-cols-1 lg:grid-cols-2 gap-6">
           {/* Table */}
           <div className="lg:col-span-1">
-            <TranslationTable
-              items={filteredItems}
-              onSelectItem={handleSelectItem}
-              selectedId={currentSelectedItem?.id}
-            />
+            {filteredItems.length > 0 ? (
+              <TranslationTable
+                items={filteredItems}
+                onSelectItem={handleSelectItem}
+                selectedId={currentSelectedItem?.id}
+              />
+            ) : (
+              <div className="watchtower-card p-12 text-center">
+                <div className="inline-flex items-center justify-center w-16 h-16 rounded-full bg-muted mb-4">
+                  <FileText className="w-8 h-8 text-muted-foreground" />
+                </div>
+                <h3 className="text-lg font-medium text-foreground mb-2">
+                  No Translations Yet
+                </h3>
+                <p className="text-sm text-muted-foreground">
+                  Click "New Translation" to add your first key and start the workflow.
+                </p>
+              </div>
+            )}
           </div>
 
           {/* Detail Panel */}

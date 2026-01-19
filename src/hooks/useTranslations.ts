@@ -1,19 +1,33 @@
 import { useState, useCallback, useMemo } from 'react';
 import { TranslationItem, TranslationState } from '@/types/translation';
-import { mockTranslations } from '@/data/mockTranslations';
 import { toast } from 'sonner';
 
 export function useTranslations() {
-  const [items, setItems] = useState<TranslationItem[]>(mockTranslations);
+  const [items, setItems] = useState<TranslationItem[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
 
   const refresh = useCallback(async () => {
     setIsRefreshing(true);
     // Simulate API call
     await new Promise((resolve) => setTimeout(resolve, 800));
-    setItems([...mockTranslations]);
     setIsRefreshing(false);
     toast.success('Data refreshed');
+  }, []);
+
+  const addItem = useCallback((key: string, zu: string) => {
+    const newItem: TranslationItem = {
+      id: `item-${Date.now()}`,
+      key,
+      zu,
+      ko: null,
+      en: null,
+      state: 'received',
+      score: null,
+      createdAt: new Date().toISOString(),
+      updatedAt: new Date().toISOString(),
+    };
+    setItems((prev) => [newItem, ...prev]);
+    return newItem;
   }, []);
 
   const updateItem = useCallback((id: string, updates: Partial<TranslationItem>) => {
@@ -122,6 +136,7 @@ export function useTranslations() {
     items,
     isRefreshing,
     refresh,
+    addItem,
     performAction,
     counts,
   };
