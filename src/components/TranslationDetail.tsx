@@ -1,10 +1,11 @@
-import { useState } from 'react';
+import { useState, useEffect } from 'react';
 import { TranslationItem, TranslationState, VALID_ACTIONS } from '@/types/translation';
 import { StateBadge } from './StateBadge';
 import { ScoreBadge } from './ScoreBadge';
 import { WorkflowProgress } from './WorkflowProgress';
 import { Button } from '@/components/ui/button';
 import { Textarea } from '@/components/ui/textarea';
+import { Input } from '@/components/ui/input';
 import { 
   CheckCircle2, 
   XCircle, 
@@ -14,13 +15,21 @@ import {
   Pencil,
   RotateCcw,
   Sparkles,
-  X
+  X,
+  Save
 } from 'lucide-react';
 
 interface TranslationDetailProps {
   item: TranslationItem;
-  onAction: (item: TranslationItem, action: string, editedKo?: string) => void;
+  onAction: (item: TranslationItem, action: string, edits?: { key?: string; zu?: string; ko?: string; en?: string }) => void;
   onClose: () => void;
+}
+
+interface EditableFields {
+  key: string;
+  zu: string;
+  ko: string;
+  en: string;
 }
 
 const actionConfig: Record<string, { icon: React.ComponentType<{ className?: string }>; label: string; variant: 'default' | 'destructive' | 'outline' | 'secondary' }> = {
@@ -37,14 +46,32 @@ const actionConfig: Record<string, { icon: React.ComponentType<{ className?: str
 export function TranslationDetail({ item, onAction, onClose }: TranslationDetailProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedKo, setEditedKo] = useState(item.ko || '');
+  const [editableFields, setEditableFields] = useState<EditableFields>({
+    key: item.key,
+    zu: item.zu,
+    ko: item.ko || '',
+    en: item.en || '',
+  });
   
+  const isReviewRequired = item.state === 'review_required';
   const validActions = VALID_ACTIONS[item.state] || [];
+
+  // Reset editable fields when item changes
+  useEffect(() => {
+    setEditableFields({
+      key: item.key,
+      zu: item.zu,
+      ko: item.ko || '',
+      en: item.en || '',
+    });
+    setEditedKo(item.ko || '');
+  }, [item]);
 
   const handleAction = (action: string) => {
     if (action === 'edit') {
       setIsEditing(true);
     } else if (action === 'approve' && isEditing) {
-      onAction(item, 'approve', editedKo);
+      onAction(item, 'approve', { ko: editedKo });
       setIsEditing(false);
     } else {
       onAction(item, action);
@@ -52,8 +79,16 @@ export function TranslationDetail({ item, onAction, onClose }: TranslationDetail
   };
 
   const handleSaveEdit = () => {
-    onAction(item, 'approve', editedKo);
+    onAction(item, 'approve', { ko: editedKo });
     setIsEditing(false);
+  };
+
+  const handleReviewApprove = () => {
+    onAction(item, 'review_approve', editableFields);
+  };
+
+  const updateField = (field: keyof EditableFields, value: string) => {
+    setEditableFields(prev => ({ ...prev, [field]: value }));
   };
 
   return (
@@ -76,14 +111,40 @@ export function TranslationDetail({ item, onAction, onClose }: TranslationDetail
       <WorkflowProgress currentState={item.state} className="mb-8" />
 
       <div className="space-y-6">
+        {/* Key */}
+        <div>
+          <label className="block text-sm font-medium text-muted-foreground mb-2">
+            Translation Key
+          </label>
+          {isReviewRequired ? (
+            <Input
+              value={editableFields.key}
+              onChange={(e) => updateField('key', e.target.value)}
+              className="font-mono"
+            />
+          ) : (
+            <div className="p-3 bg-muted/50 rounded-lg border border-border">
+              <code className="font-mono text-foreground">{item.key}</code>
+            </div>
+          )}
+        </div>
+
         {/* Source (ZU) */}
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-2">
             Source (Zulu)
           </label>
-          <div className="p-3 bg-muted/50 rounded-lg border border-border">
-            <p className="text-foreground">{item.zu}</p>
-          </div>
+          {isReviewRequired ? (
+            <Textarea
+              value={editableFields.zu}
+              onChange={(e) => updateField('zu', e.target.value)}
+              rows={2}
+            />
+          ) : (
+            <div className="p-3 bg-muted/50 rounded-lg border border-border">
+              <p className="text-foreground">{item.zu}</p>
+            </div>
+          )}
         </div>
 
         {/* Korean (KO) */}
@@ -98,6 +159,12 @@ export function TranslationDetail({ item, onAction, onClose }: TranslationDetail
               className="min-h-[100px]"
               placeholder="Enter Korean translation..."
             />
+          ) : isReviewRequired ? (
+            <Textarea
+              value={editableFields.ko}
+              onChange={(e) => updateField('ko', e.target.value)}
+              rows={2}
+            />
           ) : (
             <div className="p-3 bg-muted/50 rounded-lg border border-border min-h-[60px]">
               <p className="text-foreground">{item.ko || <span className="text-muted-foreground italic">Not yet generated</span>}</p>
@@ -110,9 +177,17 @@ export function TranslationDetail({ item, onAction, onClose }: TranslationDetail
           <label className="block text-sm font-medium text-muted-foreground mb-2">
             English Translation
           </label>
-          <div className="p-3 bg-muted/50 rounded-lg border border-border min-h-[60px]">
-            <p className="text-foreground">{item.en || <span className="text-muted-foreground italic">Not yet translated</span>}</p>
-          </div>
+          {isReviewRequired ? (
+            <Textarea
+              value={editableFields.en}
+              onChange={(e) => updateField('en', e.target.value)}
+              rows={2}
+            />
+          ) : (
+            <div className="p-3 bg-muted/50 rounded-lg border border-border min-h-[60px]">
+              <p className="text-foreground">{item.en || <span className="text-muted-foreground italic">Not yet translated</span>}</p>
+            </div>
+          )}
         </div>
 
         {/* Validation Score */}
@@ -132,10 +207,24 @@ export function TranslationDetail({ item, onAction, onClose }: TranslationDetail
       </div>
 
       {/* Actions */}
-      {(validActions.length > 0 || isEditing) && (
+      {(validActions.length > 0 || isEditing || isReviewRequired) && (
         <div className="mt-8 pt-6 border-t border-border">
           <div className="flex flex-wrap gap-3">
-            {isEditing ? (
+            {isReviewRequired ? (
+              <>
+                <Button onClick={handleReviewApprove}>
+                  <CheckCircle2 className="w-4 h-4 mr-2" />
+                  Validate & Approve
+                </Button>
+                <Button 
+                  variant="destructive" 
+                  onClick={() => onAction(item, 'reject')}
+                >
+                  <XCircle className="w-4 h-4 mr-2" />
+                  Reject
+                </Button>
+              </>
+            ) : isEditing ? (
               <>
                 <Button onClick={handleSaveEdit}>
                   <CheckCircle2 className="w-4 h-4 mr-2" />

@@ -41,7 +41,7 @@ export function useTranslations() {
   }, []);
 
   const performAction = useCallback(
-    async (item: TranslationItem, action: string, editedKo?: string) => {
+    async (item: TranslationItem, action: string, edits?: { key?: string; zu?: string; ko?: string; en?: string }) => {
       // Simulate API call
       await new Promise((resolve) => setTimeout(resolve, 500));
 
@@ -58,10 +58,21 @@ export function useTranslations() {
           break;
         case 'approve':
           newState = 'approved';
-          if (editedKo) {
-            updates.ko = editedKo;
+          if (edits?.ko) {
+            updates.ko = edits.ko;
           }
           toast.success('Translation approved');
+          break;
+        case 'review_approve':
+          newState = 'validated';
+          updates = {
+            key: edits?.key || item.key,
+            zu: edits?.zu || item.zu,
+            ko: edits?.ko || item.ko,
+            en: edits?.en || item.en,
+            score: 'high' as const,
+          };
+          toast.success('Translation validated and approved');
           break;
         case 'reject':
           newState = 'rejected';
