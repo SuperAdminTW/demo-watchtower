@@ -47,8 +47,8 @@ const Index = () => {
     ? items.find((i) => i.id === selectedItem.id) || null 
     : null;
 
-  const handleAddTranslation = (key: string, zu: string) => {
-    const newItem = addItem(key, zu);
+  const handleAddTranslation = (key: string, zu: string, context: string) => {
+    const newItem = addItem(key, zu, context);
     setSelectedItem(newItem);
   };
 

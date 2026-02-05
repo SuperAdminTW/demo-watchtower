@@ -7,6 +7,11 @@ import { Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 
 const translationSchema = z.object({
+  context: z
+    .string()
+    .trim()
+    .min(1, 'Context is required')
+    .max(50, 'Context must be less than 50 characters'),
   key: z
     .string()
     .trim()
@@ -21,26 +26,28 @@ const translationSchema = z.object({
 });
 
 interface NewTranslationFormProps {
-  onSubmit: (key: string, zu: string) => void;
+  onSubmit: (key: string, zu: string, context: string) => void;
   existingKeys: string[];
 }
 
 export function NewTranslationForm({ onSubmit, existingKeys }: NewTranslationFormProps) {
   const [isOpen, setIsOpen] = useState(false);
+  const [context, setContext] = useState('');
   const [key, setKey] = useState('');
   const [zu, setZu] = useState('');
-  const [errors, setErrors] = useState<{ key?: string; zu?: string }>({});
+  const [errors, setErrors] = useState<{ context?: string; key?: string; zu?: string }>({});
 
   const handleSubmit = (e: React.FormEvent) => {
     e.preventDefault();
     setErrors({});
 
     // Validate with zod
-    const result = translationSchema.safeParse({ key, zu });
+    const result = translationSchema.safeParse({ context, key, zu });
 
     if (!result.success) {
-      const fieldErrors: { key?: string; zu?: string } = {};
+      const fieldErrors: { context?: string; key?: string; zu?: string } = {};
       result.error.errors.forEach((err) => {
+        if (err.path[0] === 'context') fieldErrors.context = err.message;
         if (err.path[0] === 'key') fieldErrors.key = err.message;
         if (err.path[0] === 'zu') fieldErrors.zu = err.message;
       });
@@ -54,16 +61,18 @@ export function NewTranslationForm({ onSubmit, existingKeys }: NewTranslationFor
       return;
     }
 
-    onSubmit(result.data.key, result.data.zu);
+    onSubmit(result.data.key, result.data.zu, result.data.context);
     toast.success('Translation added to workflow');
     
     // Reset form
+    setContext('');
     setKey('');
     setZu('');
     setIsOpen(false);
   };
 
   const handleCancel = () => {
+    setContext('');
     setKey('');
     setZu('');
     setErrors({});
@@ -89,6 +98,24 @@ export function NewTranslationForm({ onSubmit, existingKeys }: NewTranslationFor
       </div>
 
       <form onSubmit={handleSubmit} className="space-y-4">
+        <div>
+          <label className="block text-sm font-medium text-muted-foreground mb-2">
+            Context (Category)
+          </label>
+          <Input
+            value={context}
+            onChange={(e) => setContext(e.target.value)}
+            placeholder="e.g., onboarding, settings, errors"
+            className={errors.context ? 'border-destructive' : ''}
+          />
+          {errors.context && (
+            <p className="mt-1 text-sm text-destructive">{errors.context}</p>
+          )}
+          <p className="mt-1 text-xs text-muted-foreground">
+            Group related keys (e.g., onboarding, dashboard, errors)
+          </p>
+        </div>
+
         <div>
           <label className="block text-sm font-medium text-muted-foreground mb-2">
             Translation Key

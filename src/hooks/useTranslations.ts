@@ -14,10 +14,11 @@ export function useTranslations() {
     toast.success('Data refreshed');
   }, []);
 
-  const addItem = useCallback((key: string, zu: string) => {
+  const addItem = useCallback((key: string, zu: string, context: string) => {
     const newItem: TranslationItem = {
       id: `item-${Date.now()}`,
       key,
+      context,
       zu,
       ko: null,
       en: null,
