@@ -3,6 +3,13 @@ import { z } from 'zod';
 import { Button } from '@/components/ui/button';
 import { Input } from '@/components/ui/input';
 import { Textarea } from '@/components/ui/textarea';
+import {
+  Dialog,
+  DialogContent,
+  DialogHeader,
+  DialogTitle,
+  DialogTrigger,
+} from '@/components/ui/dialog';
 import { Plus, X } from 'lucide-react';
 import { toast } from 'sonner';
 
@@ -79,87 +86,85 @@ export function NewTranslationForm({ onSubmit, existingKeys }: NewTranslationFor
     setIsOpen(false);
   };
 
-  if (!isOpen) {
-    return (
-      <Button onClick={() => setIsOpen(true)}>
-        <Plus className="w-4 h-4 mr-2" />
-        New Translation
-      </Button>
-    );
-  }
-
   return (
-    <div className="watchtower-card p-6 animate-fade-in">
-      <div className="flex items-center justify-between mb-4">
-        <h3 className="text-lg font-semibold text-foreground">Add New Translation</h3>
-        <Button variant="ghost" size="icon" onClick={handleCancel}>
-          <X className="w-4 h-4" />
+    <Dialog open={isOpen} onOpenChange={(open) => {
+      if (!open) handleCancel();
+      setIsOpen(open);
+    }}>
+      <DialogTrigger asChild>
+        <Button>
+          <Plus className="w-4 h-4 mr-2" />
+          New Translation
         </Button>
-      </div>
+      </DialogTrigger>
+      <DialogContent className="sm:max-w-md">
+        <DialogHeader>
+          <DialogTitle>Add New Translation</DialogTitle>
+        </DialogHeader>
+        <form onSubmit={handleSubmit} className="space-y-4">
+          <div>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
+              Context (Category)
+            </label>
+            <Input
+              value={context}
+              onChange={(e) => setContext(e.target.value)}
+              placeholder="e.g., onboarding, settings, errors"
+              className={errors.context ? 'border-destructive' : ''}
+            />
+            {errors.context && (
+              <p className="mt-1 text-sm text-destructive">{errors.context}</p>
+            )}
+            <p className="mt-1 text-xs text-muted-foreground">
+              Group related keys (e.g., onboarding, dashboard, errors)
+            </p>
+          </div>
 
-      <form onSubmit={handleSubmit} className="space-y-4">
-        <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-2">
-            Context (Category)
-          </label>
-          <Input
-            value={context}
-            onChange={(e) => setContext(e.target.value)}
-            placeholder="e.g., onboarding, settings, errors"
-            className={errors.context ? 'border-destructive' : ''}
-          />
-          {errors.context && (
-            <p className="mt-1 text-sm text-destructive">{errors.context}</p>
-          )}
-          <p className="mt-1 text-xs text-muted-foreground">
-            Group related keys (e.g., onboarding, dashboard, errors)
-          </p>
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
+              Translation Key
+            </label>
+            <Input
+              value={key}
+              onChange={(e) => setKey(e.target.value)}
+              placeholder="e.g., app.button.save"
+              className={errors.key ? 'border-destructive' : ''}
+            />
+            {errors.key && (
+              <p className="mt-1 text-sm text-destructive">{errors.key}</p>
+            )}
+            <p className="mt-1 text-xs text-muted-foreground">
+              Use dot notation (e.g., app.section.element)
+            </p>
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-2">
-            Translation Key
-          </label>
-          <Input
-            value={key}
-            onChange={(e) => setKey(e.target.value)}
-            placeholder="e.g., app.button.save"
-            className={errors.key ? 'border-destructive' : ''}
-          />
-          {errors.key && (
-            <p className="mt-1 text-sm text-destructive">{errors.key}</p>
-          )}
-          <p className="mt-1 text-xs text-muted-foreground">
-            Use dot notation (e.g., app.section.element)
-          </p>
-        </div>
+          <div>
+            <label className="block text-sm font-medium text-muted-foreground mb-2">
+              Source Text (Zulu)
+            </label>
+            <Textarea
+              value={zu}
+              onChange={(e) => setZu(e.target.value)}
+              placeholder="Enter the Zulu source text..."
+              className={errors.zu ? 'border-destructive' : ''}
+              rows={3}
+            />
+            {errors.zu && (
+              <p className="mt-1 text-sm text-destructive">{errors.zu}</p>
+            )}
+          </div>
 
-        <div>
-          <label className="block text-sm font-medium text-muted-foreground mb-2">
-            Source Text (Zulu)
-          </label>
-          <Textarea
-            value={zu}
-            onChange={(e) => setZu(e.target.value)}
-            placeholder="Enter the Zulu source text..."
-            className={errors.zu ? 'border-destructive' : ''}
-            rows={3}
-          />
-          {errors.zu && (
-            <p className="mt-1 text-sm text-destructive">{errors.zu}</p>
-          )}
-        </div>
-
-        <div className="flex gap-3 pt-2">
-          <Button type="submit">
-            <Plus className="w-4 h-4 mr-2" />
-            Add to Workflow
-          </Button>
-          <Button type="button" variant="outline" onClick={handleCancel}>
-            Cancel
-          </Button>
-        </div>
-      </form>
-    </div>
+          <div className="flex gap-3 pt-2">
+            <Button type="submit">
+              <Plus className="w-4 h-4 mr-2" />
+              Add to Workflow
+            </Button>
+            <Button type="button" variant="outline" onClick={handleCancel}>
+              Cancel
+            </Button>
+          </div>
+        </form>
+      </DialogContent>
+    </Dialog>
   );
 }
