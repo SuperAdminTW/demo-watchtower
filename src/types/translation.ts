@@ -13,6 +13,7 @@ export type ValidationScore = 'high' | 'medium' | 'low' | null;
 export interface TranslationItem {
   id: string;
   key: string;
+  context: string;
   zu: string;
   ko: string | null;
   en: string | null;

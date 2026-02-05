@@ -4,6 +4,7 @@ export const mockTranslations: TranslationItem[] = [
   {
     id: '1',
     key: 'app.welcome.title',
+    context: 'onboarding',
     zu: 'Siyakwamukela',
     ko: '환영합니다',
     en: 'Welcome',
@@ -15,6 +16,7 @@ export const mockTranslations: TranslationItem[] = [
   {
     id: '2',
     key: 'app.button.submit',
+    context: 'common',
     zu: 'Thumela',
     ko: '제출하다',
     en: 'Submit',
@@ -26,6 +28,7 @@ export const mockTranslations: TranslationItem[] = [
   {
     id: '3',
     key: 'app.error.network',
+    context: 'errors',
     zu: 'Iphutha lenethiwekhi',
     ko: '네트워크 오류',
     en: null,
@@ -38,6 +41,7 @@ export const mockTranslations: TranslationItem[] = [
   {
     id: '4',
     key: 'app.nav.settings',
+    context: 'navigation',
     zu: 'Izilungiselelo',
     ko: '설정',
     en: 'Settings',
@@ -49,6 +53,7 @@ export const mockTranslations: TranslationItem[] = [
   {
     id: '5',
     key: 'app.modal.confirm',
+    context: 'common',
     zu: 'Qinisekisa isenzo',
     ko: '작업 확인',
     en: null,
@@ -60,6 +65,7 @@ export const mockTranslations: TranslationItem[] = [
   {
     id: '6',
     key: 'app.toast.success',
+    context: 'feedback',
     zu: 'Impumelelo!',
     ko: null,
     en: null,
@@ -71,6 +77,7 @@ export const mockTranslations: TranslationItem[] = [
   {
     id: '7',
     key: 'app.label.username',
+    context: 'auth',
     zu: 'Igama lomsebenzisi',
     ko: null,
     en: null,
@@ -82,6 +89,7 @@ export const mockTranslations: TranslationItem[] = [
   {
     id: '8',
     key: 'app.error.auth',
+    context: 'errors',
     zu: 'Ukuqinisekiswa kwehlulekile',
     ko: '인증 실패',
     en: 'Authentication failed',
@@ -94,6 +102,7 @@ export const mockTranslations: TranslationItem[] = [
   {
     id: '9',
     key: 'app.placeholder.search',
+    context: 'common',
     zu: 'Sesha...',
     ko: '검색...',
     en: 'Search...',
@@ -105,6 +114,7 @@ export const mockTranslations: TranslationItem[] = [
   {
     id: '10',
     key: 'app.label.email',
+    context: 'auth',
     zu: 'I-imeyili',
     ko: '이메일',
     en: null,
