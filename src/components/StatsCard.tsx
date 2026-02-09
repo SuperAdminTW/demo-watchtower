@@ -8,11 +8,20 @@ interface StatsCardProps {
   trend?: 'up' | 'down' | 'neutral';
   trendValue?: string;
   className?: string;
+  isActive?: boolean;
+  onClick?: () => void;
 }
 
-export function StatsCard({ title, value, icon: Icon, trend, trendValue, className }: StatsCardProps) {
+export function StatsCard({ title, value, icon: Icon, trend, trendValue, className, isActive, onClick }: StatsCardProps) {
   return (
-    <div className={cn('watchtower-card p-4', className)}>
+    <div 
+      className={cn(
+        'watchtower-card p-4 cursor-pointer transition-all hover:ring-2 hover:ring-primary/50',
+        isActive && 'ring-2 ring-primary bg-primary/5',
+        className
+      )}
+      onClick={onClick}
+    >
       <div className="flex items-start justify-between">
         <div>
           <p className="text-sm font-medium text-muted-foreground">{title}</p>

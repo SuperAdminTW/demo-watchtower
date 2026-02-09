@@ -15,15 +15,40 @@ import {
   FileText
 } from 'lucide-react';
 
+type CardFilter = 'all' | 'pending' | 'in_progress' | 'review' | 'stored';
+
 const Index = () => {
   const { items, isRefreshing, processingIds, refresh, addItem, performAction, counts } = useTranslations();
   const [selectedItem, setSelectedItem] = useState<TranslationItem | null>(null);
   const [filterState, setFilterState] = useState<TranslationState | 'all'>('all');
+  const [cardFilter, setCardFilter] = useState<CardFilter>('all');
 
   const filteredItems = useMemo(() => {
-    if (filterState === 'all') return items;
-    return items.filter((item) => item.state === filterState);
-  }, [items, filterState]);
+    let filtered = items;
+    
+    // Apply card filter first
+    if (cardFilter === 'pending') {
+      filtered = filtered.filter((item) => item.state === 'received' || item.state === 'draft');
+    } else if (cardFilter === 'in_progress') {
+      filtered = filtered.filter((item) => item.state === 'approved' || item.state === 'translated');
+    } else if (cardFilter === 'review') {
+      filtered = filtered.filter((item) => item.state === 'review_required');
+    } else if (cardFilter === 'stored') {
+      filtered = filtered.filter((item) => item.state === 'stored');
+    }
+    
+    // Then apply state filter
+    if (filterState !== 'all') {
+      filtered = filtered.filter((item) => item.state === filterState);
+    }
+    
+    return filtered;
+  }, [items, filterState, cardFilter]);
+
+  const handleCardClick = (filter: CardFilter) => {
+    setCardFilter(filter === cardFilter ? 'all' : filter);
+    setFilterState('all'); // Reset the state filter when using card filter
+  };
 
   const handleSelectItem = (item: TranslationItem) => {
     setSelectedItem(item);
@@ -67,6 +92,8 @@ const Index = () => {
             icon={Inbox}
             trend="neutral"
             trendValue="Awaiting action"
+            isActive={cardFilter === 'pending'}
+            onClick={() => handleCardClick('pending')}
           />
           <StatsCard
             title="In Progress"
@@ -74,6 +101,8 @@ const Index = () => {
             icon={CheckCircle2}
             trend="up"
             trendValue="Being processed"
+            isActive={cardFilter === 'in_progress'}
+            onClick={() => handleCardClick('in_progress')}
           />
           <StatsCard
             title="Needs Review"
@@ -81,6 +110,8 @@ const Index = () => {
             icon={AlertTriangle}
             trend={counts.review_required > 0 ? 'down' : 'neutral'}
             trendValue={counts.review_required > 0 ? 'Requires attention' : 'All clear'}
+            isActive={cardFilter === 'review'}
+            onClick={() => handleCardClick('review')}
           />
           <StatsCard
             title="Stored"
@@ -88,6 +119,8 @@ const Index = () => {
             icon={Database}
             trend="up"
             trendValue="In Translation Memory"
+            isActive={cardFilter === 'stored'}
+            onClick={() => handleCardClick('stored')}
           />
         </div>
 
