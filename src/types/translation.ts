@@ -26,14 +26,14 @@ export interface TranslationItem {
 }
 
 export const STATE_LABELS: Record<TranslationState, string> = {
-  received: 'Receive',
-  draft: 'Draft KO',
-  approved: 'Approve',
-  translated: 'Translate EN',
-  validated: 'Validate',
-  review_required: 'Review',
+  received: 'Received',
+  draft: 'Draft',
+  approved: 'Approved',
+  translated: 'Translated',
+  validated: 'Validated',
+  review_required: 'Review Required',
   rejected: 'Rejected',
-  stored: 'Store TM',
+  stored: 'Stored',
 };
 
 export const STATE_ORDER: TranslationState[] = [
