@@ -47,11 +47,25 @@ export const STATE_ORDER: TranslationState[] = [
 
 export const VALID_ACTIONS: Record<TranslationState, string[]> = {
   received: ['generate_draft'],
-  draft: ['approve', 'edit', 'reject'],
+  draft: [],  // Auto-progresses
   approved: ['translate'],
-  translated: ['validate'],
-  validated: ['store'],
+  translated: [],  // Auto-progresses
+  validated: [],  // Auto-progresses
   review_required: ['approve', 'reject'],
   rejected: ['retry'],
   stored: [],
+};
+
+// Steps that should auto-progress (no user interaction required)
+export const AUTO_PROGRESS_STATES: TranslationState[] = [
+  'draft',
+  'translated',
+  'validated',
+];
+
+// Map of state to the action that should auto-trigger
+export const AUTO_PROGRESS_ACTIONS: Partial<Record<TranslationState, string>> = {
+  draft: 'approve',
+  translated: 'validate',
+  validated: 'store',
 };
