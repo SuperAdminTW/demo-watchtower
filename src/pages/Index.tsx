@@ -16,7 +16,7 @@ import {
 } from 'lucide-react';
 
 const Index = () => {
-  const { items, isRefreshing, refresh, addItem, performAction, counts } = useTranslations();
+  const { items, isRefreshing, processingIds, refresh, addItem, performAction, counts } = useTranslations();
   const [selectedItem, setSelectedItem] = useState<TranslationItem | null>(null);
   const [filterState, setFilterState] = useState<TranslationState | 'all'>('all');
 
@@ -113,6 +113,7 @@ const Index = () => {
                 items={filteredItems}
                 onSelectItem={handleSelectItem}
                 selectedId={currentSelectedItem?.id}
+                processingIds={processingIds}
               />
             ) : (
               <div className="watchtower-card p-12 text-center">
@@ -137,6 +138,7 @@ const Index = () => {
                 item={currentSelectedItem}
                 onAction={handleAction}
                 onClose={handleCloseDetail}
+                isProcessing={processingIds.has(currentSelectedItem.id)}
               />
             ) : (
               <div className="watchtower-card p-12 text-center">

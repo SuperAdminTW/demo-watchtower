@@ -1,10 +1,12 @@
-import { useState, useCallback, useMemo } from 'react';
-import { TranslationItem, TranslationState } from '@/types/translation';
+import { useState, useCallback, useMemo, useRef } from 'react';
+import { TranslationItem, TranslationState, AUTO_PROGRESS_STATES, AUTO_PROGRESS_ACTIONS } from '@/types/translation';
 import { toast } from 'sonner';
 
 export function useTranslations() {
   const [items, setItems] = useState<TranslationItem[]>([]);
   const [isRefreshing, setIsRefreshing] = useState(false);
+  const [processingIds, setProcessingIds] = useState<Set<string>>(new Set());
+  const processingRef = useRef<Set<string>>(new Set());
 
   const refresh = useCallback(async () => {
     setIsRefreshing(true);
@@ -41,6 +43,92 @@ export function useTranslations() {
     );
   }, []);
 
+  const triggerAutoProgress = useCallback(
+    async (itemId: string, state: TranslationState) => {
+      // Check if this state should auto-progress
+      if (!AUTO_PROGRESS_STATES.includes(state)) return;
+      
+      const action = AUTO_PROGRESS_ACTIONS[state];
+      if (!action) return;
+
+      // Prevent duplicate processing
+      if (processingRef.current.has(itemId)) return;
+      processingRef.current.add(itemId);
+      setProcessingIds(new Set(processingRef.current));
+
+      // Small delay to show the intermediate state
+      await new Promise((resolve) => setTimeout(resolve, 1000));
+
+      try {
+        // Get current item state
+        let currentItem: TranslationItem | undefined;
+        setItems((prev) => {
+          currentItem = prev.find((i) => i.id === itemId);
+          return prev;
+        });
+
+        if (!currentItem || currentItem.state !== state) {
+          processingRef.current.delete(itemId);
+          setProcessingIds(new Set(processingRef.current));
+          return;
+        }
+
+        // Simulate API call for auto-action
+        await new Promise((resolve) => setTimeout(resolve, 500));
+
+        let newState: TranslationState = state;
+        let updates: Partial<TranslationItem> = {};
+
+        switch (action) {
+          case 'approve':
+            newState = 'approved';
+            break;
+          case 'validate':
+            // Simulate random validation score
+            const scores: ('high' | 'medium' | 'low')[] = ['high', 'medium', 'low'];
+            const score = scores[Math.floor(Math.random() * 3)];
+            
+            if (score === 'high') {
+              newState = 'validated';
+            } else if (score === 'medium') {
+              newState = 'review_required';
+            } else {
+              newState = 'rejected';
+            }
+            updates.score = score;
+            break;
+          case 'store':
+            newState = 'stored';
+            break;
+        }
+
+        setItems((prev) =>
+          prev.map((item) =>
+            item.id === itemId
+              ? { ...item, state: newState, ...updates, updatedAt: new Date().toISOString() }
+              : item
+          )
+        );
+
+        // Continue auto-progression if applicable
+        if (newState !== 'review_required' && newState !== 'rejected' && newState !== 'stored') {
+          processingRef.current.delete(itemId);
+          setProcessingIds(new Set(processingRef.current));
+          triggerAutoProgress(itemId, newState);
+        } else {
+          processingRef.current.delete(itemId);
+          setProcessingIds(new Set(processingRef.current));
+        }
+      } catch (error) {
+        console.error('Auto-progress error:', error);
+        processingRef.current.delete(itemId);
+        setProcessingIds(new Set(processingRef.current));
+        toast.error('Auto-progress failed. Use manual retry.');
+      }
+    },
+    []
+  );
+
   const performAction = useCallback(
     async (item: TranslationItem, action: string, edits?: { key?: string; zu?: string; ko?: string; en?: string }) => {
       // Simulate API call
@@ -55,14 +143,14 @@ export function useTranslations() {
           updates = {
             ko: '자동 생성된 한국어 번역', // Mock generated Korean
           };
-          toast.success('Draft generated successfully');
+          toast.success('Draft generated - auto-progressing...');
           break;
         case 'approve':
           newState = 'approved';
           if (edits?.ko) {
             updates.ko = edits.ko;
           }
-          toast.success('Translation approved');
+          toast.success('Translation approved - auto-translating...');
           break;
         case 'review_approve':
           newState = 'validated';
@@ -73,7 +161,7 @@ export function useTranslations() {
             en: edits?.en || item.en,
             score: 'high' as const,
           };
-          toast.success('Translation validated and approved');
+          toast.success('Translation validated - auto-storing...');
           break;
         case 'reject':
           newState = 'rejected';
@@ -84,7 +172,7 @@ export function useTranslations() {
           updates = {
             en: 'Auto-translated English text', // Mock translation
           };
-          toast.success('Translation completed');
+          toast.success('Translation completed - auto-validating...');
           break;
         case 'validate':
           // Simulate random validation score
@@ -93,7 +181,7 @@ export function useTranslations() {
           
           if (score === 'high') {
             newState = 'validated';
-            toast.success('Validation passed with high score');
+            toast.success('Validation passed - auto-storing...');
           } else if (score === 'medium') {
             newState = 'review_required';
             toast.warning('Review required - medium score');
@@ -117,11 +205,26 @@ export function useTranslations() {
           };
           toast.info('Translation reset for retry');
           break;
+        case 'retry_step':
+          // Retry the current step's auto-action
+          triggerAutoProgress(item.id, item.state);
+          return;
       }
 
-      updateItem(item.id, { state: newState, ...updates });
+      setItems((prev) =>
+        prev.map((i) =>
+          i.id === item.id
+            ? { ...i, state: newState, ...updates, updatedAt: new Date().toISOString() }
+            : i
+        )
+      );
+
+      // Trigger auto-progression for applicable states
+      if (AUTO_PROGRESS_STATES.includes(newState)) {
+        triggerAutoProgress(item.id, newState);
+      }
     },
-    [updateItem]
+    [triggerAutoProgress]
   );
 
   const counts = useMemo(() => {
@@ -147,6 +250,7 @@ export function useTranslations() {
   return {
     items,
     isRefreshing,
+    processingIds,
     refresh,
     addItem,
     performAction,

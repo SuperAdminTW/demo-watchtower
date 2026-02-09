@@ -1,5 +1,5 @@
 import { useState, useEffect } from 'react';
-import { TranslationItem, TranslationState, VALID_ACTIONS } from '@/types/translation';
+import { TranslationItem, TranslationState, VALID_ACTIONS, AUTO_PROGRESS_STATES } from '@/types/translation';
 import { StateBadge } from './StateBadge';
 import { ScoreBadge } from './ScoreBadge';
 import { WorkflowProgress } from './WorkflowProgress';
@@ -16,13 +16,16 @@ import {
   RotateCcw,
   Sparkles,
   X,
-  Save
+  Save,
+  Loader2,
+  RefreshCw
 } from 'lucide-react';
 
 interface TranslationDetailProps {
   item: TranslationItem;
   onAction: (item: TranslationItem, action: string, edits?: { key?: string; zu?: string; ko?: string; en?: string }) => void;
   onClose: () => void;
+  isProcessing?: boolean;
 }
 
 interface EditableFields {
@@ -43,7 +46,7 @@ const actionConfig: Record<string, { icon: React.ComponentType<{ className?: str
   retry: { icon: RotateCcw, label: 'Retry', variant: 'outline' },
 };
 
-export function TranslationDetail({ item, onAction, onClose }: TranslationDetailProps) {
+export function TranslationDetail({ item, onAction, onClose, isProcessing }: TranslationDetailProps) {
   const [isEditing, setIsEditing] = useState(false);
   const [editedKo, setEditedKo] = useState(item.ko || '');
   const [editableFields, setEditableFields] = useState<EditableFields>({
@@ -55,6 +58,8 @@ export function TranslationDetail({ item, onAction, onClose }: TranslationDetail
   
   const isReviewRequired = item.state === 'review_required';
   const validActions = VALID_ACTIONS[item.state] || [];
+  const isAutoState = AUTO_PROGRESS_STATES.includes(item.state);
+  const isStuck = isAutoState && !isProcessing;
 
   // Reset editable fields when item changes
   useEffect(() => {
@@ -207,8 +212,31 @@ export function TranslationDetail({ item, onAction, onClose }: TranslationDetail
       </div>
 
       {/* Actions */}
-      {(validActions.length > 0 || isEditing || isReviewRequired) && (
+      {(validActions.length > 0 || isEditing || isReviewRequired || isProcessing || isStuck) && (
         <div className="mt-8 pt-6 border-t border-border">
+          {isProcessing && (
+            <div className="flex items-center gap-2 text-primary mb-4">
+              <Loader2 className="w-4 h-4 animate-spin" />
+              <span className="text-sm font-medium">Auto-progressing...</span>
+            </div>
+          )}
+          
+          {isStuck && (
+            <div className="flex items-center gap-3 mb-4 p-3 rounded-lg bg-amber-500/10 border border-amber-500/20">
+              <span className="text-sm text-amber-700">
+                This item appears to be stuck. Click retry to continue the workflow.
+              </span>
+              <Button 
+                variant="outline" 
+                size="sm"
+                onClick={() => onAction(item, 'retry_step')}
+              >
+                <RefreshCw className="w-4 h-4 mr-2" />
+                Retry
+              </Button>
+            </div>
+          )}
+          
           <div className="flex flex-wrap gap-3">
             {isReviewRequired ? (
               <>
@@ -244,6 +272,7 @@ export function TranslationDetail({ item, onAction, onClose }: TranslationDetail
                     key={action}
                     variant={config.variant}
                     onClick={() => handleAction(action)}
+                    disabled={isProcessing}
                   >
                     <Icon className="w-4 h-4 mr-2" />
                     {config.label}
