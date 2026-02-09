@@ -18,7 +18,7 @@ const stateToIndex: Record<TranslationState, number> = {
   stored: 5,
 };
 
-const stepLabels = ['Received', 'Draft', 'Approved', 'Translated', 'Validated', 'Stored'];
+const stepLabels = ['Receive', 'Draft KO', 'Approve', 'Translate EN', 'Validate', 'Store TM'];
 
 export function WorkflowProgress({ currentState, className }: WorkflowProgressProps) {
   const currentIndex = stateToIndex[currentState];
