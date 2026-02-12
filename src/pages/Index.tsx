@@ -7,6 +7,7 @@ import { TranslationTable } from '@/components/TranslationTable';
 import { TranslationDetail } from '@/components/TranslationDetail';
 import { StatsCard } from '@/components/StatsCard';
 import { NewTranslationForm } from '@/components/NewTranslationForm';
+import { FilterBar, FilterCondition, applyFilterConditions } from '@/components/FilterBar';
 import { 
   Inbox, 
   CheckCircle2, 
@@ -22,11 +23,11 @@ const Index = () => {
   const [selectedItem, setSelectedItem] = useState<TranslationItem | null>(null);
   const [filterState, setFilterState] = useState<TranslationState | 'all'>('all');
   const [cardFilter, setCardFilter] = useState<CardFilter>('all');
+  const [filterConditions, setFilterConditions] = useState<FilterCondition[]>([]);
 
   const filteredItems = useMemo(() => {
     let filtered = items;
     
-    // Apply card filter first
     if (cardFilter === 'pending') {
       filtered = filtered.filter((item) => item.state === 'received' || item.state === 'draft');
     } else if (cardFilter === 'in_progress') {
@@ -37,13 +38,14 @@ const Index = () => {
       filtered = filtered.filter((item) => item.state === 'stored');
     }
     
-    // Then apply state filter
     if (filterState !== 'all') {
       filtered = filtered.filter((item) => item.state === filterState);
     }
+
+    filtered = applyFilterConditions(filtered, filterConditions);
     
     return filtered;
-  }, [items, filterState, cardFilter]);
+  }, [items, filterState, cardFilter, filterConditions]);
 
   const handleCardClick = (filter: CardFilter) => {
     setCardFilter(filter === cardFilter ? 'all' : filter);
@@ -122,6 +124,11 @@ const Index = () => {
             isActive={cardFilter === 'stored'}
             onClick={() => handleCardClick('stored')}
           />
+        </div>
+
+        {/* Filter Bar */}
+        <div className="watchtower-card p-4 mb-6">
+          <FilterBar conditions={filterConditions} onChange={setFilterConditions} />
         </div>
 
         {/* Actions & Filter */}
