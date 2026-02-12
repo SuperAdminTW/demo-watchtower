@@ -13,6 +13,15 @@ import {
 import { Plus, Upload } from 'lucide-react';
 import { toast } from 'sonner';
 import { Tabs, TabsContent, TabsList, TabsTrigger } from '@/components/ui/tabs';
+import {
+  Select,
+  SelectContent,
+  SelectItem,
+  SelectTrigger,
+  SelectValue,
+} from '@/components/ui/select';
+
+const CONTEXT_OPTIONS = ['Checker', 'Enterprise', 'Guide'] as const;
 
 const translationSchema = z.object({
   context: z
@@ -220,18 +229,19 @@ export function NewTranslationForm({ onSubmit, existingKeys }: NewTranslationFor
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Context (Category)
                 </label>
-                <Input
-                  value={context}
-                  onChange={(e) => setContext(e.target.value)}
-                  placeholder="e.g., onboarding, settings, errors"
-                  className={errors.context ? 'border-destructive' : ''}
-                />
+                <Select value={context} onValueChange={setContext}>
+                  <SelectTrigger className={errors.context ? 'border-destructive' : ''}>
+                    <SelectValue placeholder="Select context..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CONTEXT_OPTIONS.map((opt) => (
+                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 {errors.context && (
                   <p className="mt-1 text-sm text-destructive">{errors.context}</p>
                 )}
-                <p className="mt-1 text-xs text-muted-foreground">
-                  Group related keys (e.g., onboarding, dashboard, errors)
-                </p>
               </div>
 
               <div>
@@ -286,12 +296,16 @@ export function NewTranslationForm({ onSubmit, existingKeys }: NewTranslationFor
                 <label className="block text-sm font-medium text-muted-foreground mb-2">
                   Context (Category)
                 </label>
-                <Input
-                  value={jsonContext}
-                  onChange={(e) => setJsonContext(e.target.value)}
-                  placeholder="e.g., onboarding, settings, errors"
-                  className={jsonError?.includes('Context') ? 'border-destructive' : ''}
-                />
+                <Select value={jsonContext} onValueChange={setJsonContext}>
+                  <SelectTrigger className={jsonError?.includes('Context') ? 'border-destructive' : ''}>
+                    <SelectValue placeholder="Select context..." />
+                  </SelectTrigger>
+                  <SelectContent>
+                    {CONTEXT_OPTIONS.map((opt) => (
+                      <SelectItem key={opt} value={opt}>{opt}</SelectItem>
+                    ))}
+                  </SelectContent>
+                </Select>
                 <p className="mt-1 text-xs text-muted-foreground">
                   All imported keys will use this context
                 </p>
